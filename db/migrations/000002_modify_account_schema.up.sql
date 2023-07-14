@@ -1,0 +1,1 @@
+ALTER TABLE accounts ADD COLUMN version int DEFAULT 1;
