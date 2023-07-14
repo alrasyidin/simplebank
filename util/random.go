@@ -28,7 +28,7 @@ func RandomString(n int) string {
 }
 
 func RandomMoney() int64 {
-	return RandomInt(50, 1000)
+	return RandomInt(80, 1000)
 }
 
 func RandomCurrencies() string {

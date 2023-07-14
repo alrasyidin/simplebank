@@ -88,13 +88,12 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParam) (Transf
 			return err
 		}
 		if arg.FromAccountID < arg.ToAccountID {
-			store.AddMoney(ctx, q, result.FromAccount.ID, -arg.Amount, result.ToAccount.ID, arg.Amount)
+			result.FromAccount, result.ToAccount, err = store.AddMoney(ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)
 		} else {
-			store.AddMoney(ctx, q, result.ToAccount.ID, arg.Amount, result.FromAccount.ID, -arg.Amount)
-
+			result.ToAccount, result.FromAccount, err = store.AddMoney(ctx, q, arg.ToAccountID, arg.Amount, arg.FromAccountID, -arg.Amount)
 		}
 
-		return nil
+		return err
 	})
 
 	return result, err
@@ -103,7 +102,7 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParam) (Transf
 func (store *Store) AddMoney(ctx context.Context, q *Queries, accountID1, amount1, accountID2, amount2 int64) (account1, account2 Account, err error) {
 	account1, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
 		ID:     accountID1,
-		Amount: -amount1,
+		Amount: amount1,
 	})
 	if err != nil {
 		return
@@ -113,9 +112,6 @@ func (store *Store) AddMoney(ctx context.Context, q *Queries, accountID1, amount
 		ID:     accountID2,
 		Amount: amount2,
 	})
-	if err != nil {
-		return
-	}
 
 	return
 }

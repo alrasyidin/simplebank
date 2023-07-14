@@ -83,7 +83,7 @@ func TestCreateTransfer(t *testing.T) {
 
 		diff1 := account1.Balance - fromAccount.Balance
 		diff2 := toAccount.Balance - account2.Balance
-
+		fmt.Println("diff", diff1, diff2)
 		require.Equal(t, diff1, diff2)
 		require.True(t, diff1 > 0)
 		require.True(t, diff1%amount == 0)
