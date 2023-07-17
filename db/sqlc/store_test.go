@@ -47,7 +47,7 @@ func TestCreateTransfer(t *testing.T) {
 		require.Equal(t, account2.ID, transfer.ToAccountID)
 		require.Equal(t, amount, transfer.Amount)
 
-		_, err = store.Queries.GetTransfer(context.Background(), transfer.ID)
+		_, err = store.GetTransfer(context.Background(), transfer.ID)
 		require.NoError(t, err)
 
 		// check entries

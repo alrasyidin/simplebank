@@ -6,19 +6,26 @@ import (
 	"fmt"
 )
 
-type Store struct {
+type Store interface {
+	ExecTx(ctx context.Context, fn func(*Queries) error) error
+	TransferTx(ctx context.Context, arg TransferTxParam) (TransferTxResult, error)
+	AddMoney(ctx context.Context, q *Queries, accountID1, amount1, accountID2, amount2 int64) (account1, account2 Account, err error)
+	Querier
+}
+
+type SQLStore struct {
 	*Queries
 	db *sql.DB
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewStore(db *sql.DB) Store {
+	return &SQLStore{
 		Queries: New(db),
 		db:      db,
 	}
 }
 
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLStore) ExecTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 
 	if err != nil {
@@ -58,9 +65,9 @@ type TransferTxResult struct {
 
 var txKey = struct{}{}
 
-func (store *Store) TransferTx(ctx context.Context, arg TransferTxParam) (TransferTxResult, error) {
+func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParam) (TransferTxResult, error) {
 	var result TransferTxResult
-	err := store.execTx(ctx, func(q *Queries) error {
+	err := store.ExecTx(ctx, func(q *Queries) error {
 		var err error
 
 		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams{
@@ -99,7 +106,7 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParam) (Transf
 	return result, err
 }
 
-func (store *Store) AddMoney(ctx context.Context, q *Queries, accountID1, amount1, accountID2, amount2 int64) (account1, account2 Account, err error) {
+func (store *SQLStore) AddMoney(ctx context.Context, q *Queries, accountID1, amount1, accountID2, amount2 int64) (account1, account2 Account, err error) {
 	account1, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
 		ID:     accountID1,
 		Amount: amount1,
