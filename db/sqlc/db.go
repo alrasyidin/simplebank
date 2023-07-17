@@ -7,8 +7,6 @@ package db
 import (
 	"context"
 	"database/sql"
-
-	_ "go.uber.org/mock/mockgen/model"
 )
 
 type DBTX interface {
