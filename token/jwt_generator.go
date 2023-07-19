@@ -15,7 +15,7 @@ type JWTGenerator struct {
 }
 
 // Constructor for JWTGenerator
-func NewJWTGenerator(secretKey string) (Generator, error) {
+func NewJWTGenerator(secretKey string) (*JWTGenerator, error) {
 	if len(secretKey) < minSecretKeySize {
 		return nil, fmt.Errorf("invalid key size: must be at least %d characters", minSecretKeySize)
 	}
