@@ -15,7 +15,7 @@ type JWTGenerator struct {
 }
 
 // Constructor for JWTGenerator
-func NewJWTGenerator(secretKey string) (*JWTGenerator, error) {
+func NewJWTGenerator(secretKey string) (Generator, error) {
 	if len(secretKey) < minSecretKeySize {
 		return nil, fmt.Errorf("invalid key size: must be at least %d characters", minSecretKeySize)
 	}
@@ -60,4 +60,8 @@ func (g *JWTGenerator) VerifyToken(token string) (*PayloadJWT, error) {
 	}
 
 	return payload, nil
+}
+
+func (mp *JWTGenerator) VerifyTokenPaseto(token string) (*PayloadPaseto, error) {
+	panic("not implemented") // TODO: Implement
 }

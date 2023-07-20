@@ -122,19 +122,22 @@ SELECT
   id, owner, balance, currency, created_at, version
 FROM
   accounts
+WHERE 
+  owner = $1
 ORDER BY
   id
-LIMIT $1
-OFFSET $2
+LIMIT $2
+OFFSET $3
 `
 
 type ListAccountsParams struct {
-	Limit  int32 `db:"limit"`
-	Offset int32 `db:"offset"`
+	Owner  string `db:"owner"`
+	Limit  int32  `db:"limit"`
+	Offset int32  `db:"offset"`
 }
 
 func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error) {
-	rows, err := q.db.QueryContext(ctx, listAccounts, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listAccounts, arg.Owner, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
