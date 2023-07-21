@@ -69,7 +69,9 @@ func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParam) (Tra
 	var result TransferTxResult
 	err := store.ExecTx(ctx, func(q *Queries) error {
 		var err error
+		tx := ctx.Value(txKey)
 
+		fmt.Printf("%s create transfer\n", tx)
 		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams{
 			FromAccountID: arg.FromAccountID,
 			ToAccountID:   arg.ToAccountID,
@@ -79,6 +81,7 @@ func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParam) (Tra
 			return err
 		}
 
+		fmt.Printf("%s from entry\n", tx)
 		result.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.FromAccountID,
 			Amount:    -arg.Amount,
@@ -87,6 +90,7 @@ func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParam) (Tra
 			return err
 		}
 
+		fmt.Printf("%s to entry\n", tx)
 		result.ToEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.ToAccountID,
 			Amount:    arg.Amount,
@@ -94,15 +98,21 @@ func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParam) (Tra
 		if err != nil {
 			return err
 		}
+
 		if arg.FromAccountID < arg.ToAccountID {
+			fmt.Printf("%s update money from account > to account\n", tx)
 			result.FromAccount, result.ToAccount, err = store.AddMoney(ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)
 		} else {
+			fmt.Printf("%s update money to account > from account\n", tx)
 			result.ToAccount, result.FromAccount, err = store.AddMoney(ctx, q, arg.ToAccountID, arg.Amount, arg.FromAccountID, -arg.Amount)
 		}
 
-		return err
-	})
+		if err != nil {
+			return err
+		}
 
+		return nil
+	})
 	return result, err
 }
 

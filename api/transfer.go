@@ -30,7 +30,7 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 		return
 	}
 
-	authPayload := ctx.MustGet(authorizationHeaderPayload).(token.PayloadJWT)
+	authPayload := ctx.MustGet(authorizationHeaderPayload).(*token.PayloadJWT)
 	if authPayload.Username != fromAccount.Owner {
 		err := errors.New("from account doesn't belong authenticated user")
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -50,7 +50,7 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 
 	result, err := server.store.TransferTx(ctx, data)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 

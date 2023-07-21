@@ -299,7 +299,7 @@ func TestCreateAccountAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.CreateAccountParams{
-					Owner:    user.Username,
+					Owner:    account.Owner,
 					Currency: account.Currency,
 					Balance:  0,
 				}

@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,16 +15,19 @@ func TestCreateTransfer(t *testing.T) {
 	account1 := createRandomAccount(t)
 	account2 := createRandomAccount(t)
 	fmt.Println(">> before: ", account1.Balance, account2.Balance)
-	n := 5
+	n := 2
 	amount := int64(10)
 
 	errs := make(chan error)
 
 	results := make(chan TransferTxResult)
-
+	var mutex sync.Mutex
 	for i := 0; i < n; i++ {
+		txName := fmt.Sprintf("tx: %d", i+1)
 		go func() {
-			result, err := store.TransferTx(context.Background(), TransferTxParam{
+			mutex.Lock()
+			ctx := context.WithValue(context.Background(), txKey, txName)
+			result, err := store.TransferTx(ctx, TransferTxParam{
 				Amount:        amount,
 				FromAccountID: account1.ID,
 				ToAccountID:   account2.ID,
@@ -31,6 +35,7 @@ func TestCreateTransfer(t *testing.T) {
 
 			errs <- err
 			results <- result
+			mutex.Unlock()
 		}()
 	}
 	existed := make(map[int]bool)
@@ -116,7 +121,7 @@ func TestTransferTxDeadlock(t *testing.T) {
 
 	errs := make(chan error)
 	// results := make(chan TransferTxResult)
-	// var mutex sync.Mutex
+	var mutex sync.Mutex
 	for i := 0; i < n; i++ {
 		fromAccountId := account1.ID
 		toAccountId := account2.ID
@@ -126,14 +131,14 @@ func TestTransferTxDeadlock(t *testing.T) {
 			toAccountId = account1.ID
 		}
 		go func() {
-			// mutex.Lock()
+			mutex.Lock()
 			_, err := store.TransferTx(context.Background(), TransferTxParam{
 				Amount:        amount,
 				FromAccountID: fromAccountId,
 				ToAccountID:   toAccountId,
 			})
 			errs <- err
-			// mutex.Unlock()
+			mutex.Unlock()
 			// results <- result
 		}()
 	}

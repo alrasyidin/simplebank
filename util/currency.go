@@ -1,13 +1,15 @@
 package util
 
-var Currencies = []string{"EUR", "USD", "IDR"}
+const (
+	USD = "USD"
+	IDR = "IDR"
+	EUR = "EUR"
+)
 
 func IsValidCurrency(currency string) bool {
-
-	for _, v := range Currencies {
-		if v == currency {
-			return true
-		}
+	switch currency {
+	case USD, EUR, IDR:
+		return true
 	}
 
 	return false
