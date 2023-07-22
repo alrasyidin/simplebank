@@ -9,4 +9,4 @@ CREATE TABLE "users" (
 
 ALTER TABLE "accounts" ADD FOREIGN KEY ("owner") REFERENCES "users" ("username");
 
-ALTER TABLE "accounts" ADD CONSTRAINT "onwer_balance_key" UNIQUE ("owner", "balance")
+ALTER TABLE "accounts" ADD CONSTRAINT "onwer_currency_key" UNIQUE ("owner", "currency")

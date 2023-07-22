@@ -25,8 +25,6 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		return
 	}
 
-	log.Println("param", param)
-
 	authPayload := ctx.MustGet(authorizationHeaderPayload).(*token.PayloadJWT)
 
 	data := db.CreateAccountParams{
@@ -41,7 +39,7 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				ctx.JSON(http.StatusForbidden, errorResponse(pqErr))
 				return
 			}
 		}

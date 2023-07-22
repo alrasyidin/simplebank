@@ -18,11 +18,12 @@ func TestJWTGenerator(t *testing.T) {
 
 	issuedAt := time.Now()
 
-	token, err := generator.CreateToken(username, duration)
+	token, payload, err := generator.CreateToken(username, duration)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
+	require.NotEmpty(t, payload)
 
-	payload, err := generator.VerifyToken(token)
+	payload, err = generator.VerifyToken(token)
 	require.NoError(t, err)
 	require.NotEmpty(t, payload)
 	require.NotZero(t, payload.Payload.ID)
@@ -39,11 +40,12 @@ func TestJWTGeneratorExpired(t *testing.T) {
 	username := util.RandomOwner()
 	duration := -time.Minute
 
-	token, err := generator.CreateToken(username, duration)
+	token, payload, err := generator.CreateToken(username, duration)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
+	require.NotEmpty(t, payload)
 
-	payload, err := generator.VerifyToken(token)
+	payload, err = generator.VerifyToken(token)
 	require.Error(t, err)
 	require.Nil(t, payload)
 	require.EqualError(t, err, ErrExpiredToken.Error())

@@ -7,11 +7,12 @@ import (
 )
 
 type Config struct {
-	DBDriver            string        `mapstructure:"DB_DRIVER"`
-	DBSource            string        `mapstructure:"DB_SOURCE"`
-	ServerAddress       string        `mapstructure:"SERVER_ADDRESS"`
-	TokenKey            string        `mapstructure:"TOKEN_KEY"`
-	AccessTokenDuration time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+	DBDriver             string        `mapstructure:"DB_DRIVER"`
+	DBSource             string        `mapstructure:"DB_SOURCE"`
+	ServerAddress        string        `mapstructure:"SERVER_ADDRESS"`
+	TokenKey             string        `mapstructure:"TOKEN_KEY"`
+	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
@@ -27,6 +28,8 @@ func LoadConfig(path string) (config Config, err error) {
 	if err != nil {
 		return
 	}
+
+	// opt := viper.DecodeHook(mapstructure.StringToTimeDurationHookFunc())
 
 	err = viper.Unmarshal(&config)
 	return

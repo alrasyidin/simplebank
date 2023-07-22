@@ -1,3 +1,5 @@
+DB_URL=postgresql://root:postgres@localhost:5432/simple_bank?sslmode=disable
+
 postgres:
 	docker run --name postgres12 -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=root -p 5432:5432 -d postgres:12-alpine
 createdb: 
@@ -5,13 +7,13 @@ createdb:
 dropdb: 
 	docker exec -it postgres12 dropdb simple_bank
 migrateup:
-	migrate -path db/migrations -database "postgresql://root:postgres@localhost:5432/simple_bank?sslmode=disable" -verbose up
+	migrate -path db/migrations -database "${DB_URL}" -verbose up
 migrateup1:
-	migrate -path db/migrations -database "postgresql://root:postgres@localhost:5432/simple_bank?sslmode=disable" -verbose up 1
+	migrate -path db/migrations -database "${DB_URL}" -verbose up 1
 migratedown:
-	migrate -path db/migrations -database "postgresql://root:postgres@localhost:5432/simple_bank?sslmode=disable" -verbose down
+	migrate -path db/migrations -database "${DB_URL}" -verbose down
 migratedown1:
-	migrate -path db/migrations -database "postgresql://root:postgres@localhost:5432/simple_bank?sslmode=disable" -verbose down 1
+	migrate -path db/migrations -database "${DB_URL}" -verbose down 1
 sqlc:
 	sqlc generate
 test:
