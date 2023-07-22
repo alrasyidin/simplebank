@@ -22,5 +22,7 @@ server:
 	air
 mock:
 	mockgen -package mockdb -destination ./db/mock/store.go github.com/alrasyidin/simplebank-go/db/sqlc Store
+dbdocs:
+	dbdocs build docs/db.dbml
 
-.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test mock
+.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test mock server dbdocs
