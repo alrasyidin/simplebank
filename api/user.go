@@ -215,3 +215,7 @@ func (server *Server) refreshToken(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, resp)
 }
+
+func (server *Server) updateUser(ctx *gin.Context) {
+
+}

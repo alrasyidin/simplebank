@@ -5,13 +5,34 @@ package pb;
 import "google/api/annotations.proto";
 import "rpc_create_user.proto";
 import "rpc_login_user.proto";
+import "rpc_update_user.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
 option go_package = "github.com/alrasyidin/simplebank-go/pb";
 
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Simple Bank Project";
+    version: "1.0";
+    contact: {
+      name: "simple-bank";
+      url: "https://github.com/alrasyidin/simplebank";
+      email: "hamstergeek38@gmail.com";
+    };
+  };
+};
 
 service SimpleBank{
   rpc CreateUser(CreateUserRequest)  returns (CreateUserResponse) {
     option (google.api.http) = {
-      post: "/v1/create_8ser"
+      post: "/v1/create_user"
+      body: "*"
+    };
+  };
+  rpc UpdateUser(UpdateUserRequest)  returns (UpdateUserResponse) {
+    option (google.api.http) = {
+      patch: "/v1/update_user"
       body: "*"
     };
   };

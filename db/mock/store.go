@@ -392,3 +392,33 @@ func (mr *MockStoreMockRecorder) UpdateTransfer(arg0, arg1 interface{}) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTransfer", reflect.TypeOf((*MockStore)(nil).UpdateTransfer), arg0, arg1)
 }
+
+// UpdateUserUsingCaseFirst mocks base method.
+func (m *MockStore) UpdateUserUsingCaseFirst(arg0 context.Context, arg1 db.UpdateUserUsingCaseFirstParams) (db.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserUsingCaseFirst", arg0, arg1)
+	ret0, _ := ret[0].(db.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserUsingCaseFirst indicates an expected call of UpdateUserUsingCaseFirst.
+func (mr *MockStoreMockRecorder) UpdateUserUsingCaseFirst(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserUsingCaseFirst", reflect.TypeOf((*MockStore)(nil).UpdateUserUsingCaseFirst), arg0, arg1)
+}
+
+// UpdateUserUsingCaseSecond mocks base method.
+func (m *MockStore) UpdateUserUsingCaseSecond(arg0 context.Context, arg1 db.UpdateUserUsingCaseSecondParams) (db.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserUsingCaseSecond", arg0, arg1)
+	ret0, _ := ret[0].(db.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserUsingCaseSecond indicates an expected call of UpdateUserUsingCaseSecond.
+func (mr *MockStoreMockRecorder) UpdateUserUsingCaseSecond(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserUsingCaseSecond", reflect.TypeOf((*MockStore)(nil).UpdateUserUsingCaseSecond), arg0, arg1)
+}

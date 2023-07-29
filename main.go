@@ -9,6 +9,8 @@ import (
 
 	"github.com/alrasyidin/simplebank-go/api"
 	db "github.com/alrasyidin/simplebank-go/db/sqlc"
+	"github.com/alrasyidin/simplebank-go/docs"
+	_ "github.com/alrasyidin/simplebank-go/docs"
 	"github.com/alrasyidin/simplebank-go/gapi"
 	"github.com/alrasyidin/simplebank-go/pb"
 	"github.com/alrasyidin/simplebank-go/util"
@@ -34,6 +36,7 @@ func main() {
 	store := db.NewStore(conn)
 	go runGatewayServer(store, config)
 	runGRPCServer(store, config)
+	// runGinServer(store, config)
 }
 
 func runGinServer(store db.Store, config util.Config) {
@@ -95,6 +98,8 @@ func runGatewayServer(store db.Store, config util.Config) {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
+	swaggerHandler := http.FileServer(http.FS(docs.StaticSwagger))
+	mux.Handle("/swagger/", swaggerHandler)
 
 	listener, err := net.Listen("tcp", config.HTTPServerAddress)
 	if err != nil {

@@ -17,4 +17,4 @@ COPY db/migrations ./migrations
 
 EXPOSE 8081
 CMD [ "/app/main" ]
-ENTRYPOINT [ "/app/start.sh" ]
+ENTRYPOINT [ "/app/start.sh" ] 
