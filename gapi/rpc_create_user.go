@@ -3,11 +3,14 @@ package gapi
 import (
 	"context"
 	"log"
+	"time"
 
 	db "github.com/alrasyidin/simplebank-go/db/sqlc"
 	"github.com/alrasyidin/simplebank-go/pb"
 	"github.com/alrasyidin/simplebank-go/util"
 	"github.com/alrasyidin/simplebank-go/validation"
+	"github.com/alrasyidin/simplebank-go/worker"
+	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
@@ -32,7 +35,22 @@ func (server *Server) CreateUser(ctx context.Context, param *pb.CreateUserReques
 		FullName:       param.GetFullName(),
 	}
 
-	user, err := server.store.CreateUser(ctx, data)
+	arg := db.CreateUserTxParam{
+		CreateUserParams: data,
+		AfterCreate: func(user db.User) error {
+			taskPayload := &worker.PayloadSendVerifyEmail{
+				Username: user.Username,
+			}
+			opts := []asynq.Option{
+				asynq.MaxRetry(10),
+				asynq.ProcessIn(time.Second * 15),
+				asynq.Queue(worker.QueueCritical),
+			}
+			return server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, taskPayload, opts...)
+		},
+	}
+
+	result, err := server.store.CreateUserTx(ctx, arg)
 	if err != nil {
 		log.Println(err)
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -45,7 +63,7 @@ func (server *Server) CreateUser(ctx context.Context, param *pb.CreateUserReques
 	}
 
 	response := &pb.CreateUserResponse{
-		User: convertUser(user),
+		User: convertUser(result.User),
 	}
 	return response, nil
 }

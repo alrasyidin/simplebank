@@ -13,7 +13,9 @@ import (
 	"github.com/alrasyidin/simplebank-go/gapi"
 	"github.com/alrasyidin/simplebank-go/pb"
 	"github.com/alrasyidin/simplebank-go/util"
+	"github.com/alrasyidin/simplebank-go/worker"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/hibiken/asynq"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -36,9 +38,26 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
-	go runGatewayServer(store, config)
-	runGRPCServer(store, config)
+
+	redisOpt := asynq.RedisClientOpt{
+		Addr: config.RedisAddress,
+	}
+
+	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
+	go runTaskProcessor(redisOpt, store)
+	go runGatewayServer(store, config, taskDistributor)
+	runGRPCServer(store, config, taskDistributor)
 	// runGinServer(store, config)
+}
+
+func runTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) {
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store)
+
+	log.Info().Msg("tart task processor")
+	err := taskProcessor.Start()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to start task processor")
+	}
 }
 
 func runGinServer(store db.Store, config util.Config) {
@@ -54,11 +73,11 @@ func runGinServer(store db.Store, config util.Config) {
 	}
 }
 
-func runGRPCServer(store db.Store, config util.Config) {
+func runGRPCServer(store db.Store, config util.Config, taskDistributor worker.TaskDistributor) {
 	logger := grpc.UnaryInterceptor(gapi.GrpcLogger)
 
 	grpcServer := grpc.NewServer(logger)
-	server, err := gapi.NewServer(store, config)
+	server, err := gapi.NewServer(store, config, taskDistributor)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot create server")
 	}
@@ -77,8 +96,8 @@ func runGRPCServer(store db.Store, config util.Config) {
 	}
 }
 
-func runGatewayServer(store db.Store, config util.Config) {
-	server, err := gapi.NewServer(store, config)
+func runGatewayServer(store db.Store, config util.Config, taskDistributor worker.TaskDistributor) {
+	server, err := gapi.NewServer(store, config, taskDistributor)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot create server")
 	}
