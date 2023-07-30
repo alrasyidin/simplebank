@@ -26,13 +26,13 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	config, err := util.LoadConfig(".")
 	if err != nil {
-		log.Fatal().Msg("cannot load config")
+		log.Fatal().Err(err).Msg("cannot load config")
 	}
 
 	conn, err := sql.Open(config.DBDriver, config.DBSource)
 
 	if err != nil {
-		log.Fatal().Msg("cannot connect to db")
+		log.Fatal().Err(err).Msg("cannot connect to db")
 	}
 
 	store := db.NewStore(conn)
@@ -44,13 +44,13 @@ func main() {
 func runGinServer(store db.Store, config util.Config) {
 	server, err := api.NewServer(store, config)
 	if err != nil {
-		log.Fatal().Msg("cannot start the server")
+		log.Fatal().Err(err).Msg("cannot start the server")
 	}
 
 	err = server.Start(config.HTTPServerAddress)
 
 	if err != nil {
-		log.Fatal().Msg("cannot start server")
+		log.Fatal().Err(err).Msg("cannot start server")
 	}
 }
 
@@ -60,27 +60,27 @@ func runGRPCServer(store db.Store, config util.Config) {
 	grpcServer := grpc.NewServer(logger)
 	server, err := gapi.NewServer(store, config)
 	if err != nil {
-		log.Fatal().Msg("cannot create server")
+		log.Fatal().Err(err).Msg("cannot create server")
 	}
 	pb.RegisterSimpleBankServer(grpcServer, server)
 	reflection.Register(grpcServer)
 
 	listener, err := net.Listen("tcp", config.GRPCServerAddress)
 	if err != nil {
-		log.Fatal().Msg("cannot create listener")
+		log.Fatal().Err(err).Msg("cannot create listener")
 	}
 
 	log.Info().Msgf("start gRPC server at %s", listener.Addr().String())
 	err = grpcServer.Serve(listener)
 	if err != nil {
-		log.Fatal().Msg("cannot start gRPC server")
+		log.Fatal().Err(err).Msg("cannot start gRPC server")
 	}
 }
 
 func runGatewayServer(store db.Store, config util.Config) {
 	server, err := gapi.NewServer(store, config)
 	if err != nil {
-		log.Fatal().Msg("cannot create server")
+		log.Fatal().Err(err).Msg("cannot create server")
 	}
 	grpcMux := runtime.NewServeMux(
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
@@ -97,7 +97,7 @@ func runGatewayServer(store db.Store, config util.Config) {
 	defer cancel()
 	err = pb.RegisterSimpleBankHandlerServer(ctx, grpcMux, server)
 	if err != nil {
-		log.Fatal().Msg("cannot register handler server:")
+		log.Fatal().Err(err).Msg("cannot register handler server:")
 	}
 
 	mux := http.NewServeMux()
@@ -107,12 +107,13 @@ func runGatewayServer(store db.Store, config util.Config) {
 
 	listener, err := net.Listen("tcp", config.HTTPServerAddress)
 	if err != nil {
-		log.Fatal().Msg("cannot create listener:")
+		log.Fatal().Err(err).Msg("cannot create listener:")
 	}
 
 	log.Info().Msgf("Start HTTP gateway server at %s", listener.Addr().String())
-	err = http.Serve(listener, mux)
+	handler := gapi.HttpLogger(mux)
+	err = http.Serve(listener, handler)
 	if err != nil {
-		log.Fatal().Msg("cannot start HTTP gateway server:")
+		log.Fatal().Err(err).Msg("cannot start HTTP gateway server:")
 	}
 }
