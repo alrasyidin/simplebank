@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/alrasyidin/simplebank-go/util"
@@ -18,7 +17,7 @@ func createRandomAccount(t *testing.T) Account {
 		Balance:  util.RandomMoney(),
 	}
 
-	account, err := testQueries.CreateAccount(context.Background(), arg)
+	account, err := testStore.CreateAccount(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
@@ -39,7 +38,7 @@ func TestCreateAccount(t *testing.T) {
 func TestGetAccount(t *testing.T) {
 	account := createRandomAccount(t)
 
-	getAccount, err := testQueries.GetAccount(context.Background(), account.ID)
+	getAccount, err := testStore.GetAccount(context.Background(), account.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, getAccount)
@@ -58,7 +57,7 @@ func TestUpdateAccount(t *testing.T) {
 		ID:      account.ID,
 		Balance: account.Balance,
 	}
-	updateAccount, err := testQueries.UpdateAccount(context.Background(), arg)
+	updateAccount, err := testStore.UpdateAccount(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, updateAccount)
@@ -73,14 +72,14 @@ func TestUpdateAccount(t *testing.T) {
 func TestDeleteAccount(t *testing.T) {
 	account := createRandomAccount(t)
 
-	err := testQueries.DeleteAccount(context.Background(), account.ID)
+	err := testStore.DeleteAccount(context.Background(), account.ID)
 
 	require.NoError(t, err)
 
-	notExistAccount, err := testQueries.GetAccount(context.Background(), account.ID)
+	notExistAccount, err := testStore.GetAccount(context.Background(), account.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, ErrRecordNotFound.Error())
 	require.Empty(t, notExistAccount)
 }
 
@@ -94,7 +93,7 @@ func TestListAccount(t *testing.T) {
 		Limit:  5,
 		Offset: 0,
 	}
-	accounts, err := testQueries.ListAccounts(context.Background(), arg)
+	accounts, err := testStore.ListAccounts(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, accounts)
 

@@ -5,19 +5,19 @@
 package db
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Account struct {
-	ID        int64         `db:"id"`
-	Owner     string        `db:"owner"`
-	Balance   int64         `db:"balance"`
-	Currency  string        `db:"currency"`
-	CreatedAt time.Time     `db:"created_at"`
-	Version   sql.NullInt32 `db:"version"`
+	ID        int64       `db:"id"`
+	Owner     string      `db:"owner"`
+	Balance   int64       `db:"balance"`
+	Currency  string      `db:"currency"`
+	CreatedAt time.Time   `db:"created_at"`
+	Version   pgtype.Int4 `db:"version"`
 }
 
 type Entry struct {
@@ -28,14 +28,14 @@ type Entry struct {
 }
 
 type Session struct {
-	ID           uuid.UUID    `db:"id"`
-	Username     string       `db:"username"`
-	RefreshToken string       `db:"refresh_token"`
-	UserAgent    string       `db:"user_agent"`
-	ClientIp     string       `db:"client_ip"`
-	IsBlocked    sql.NullBool `db:"is_blocked"`
-	ExpiresAt    time.Time    `db:"expires_at"`
-	CreatedAt    time.Time    `db:"created_at"`
+	ID           uuid.UUID   `db:"id"`
+	Username     string      `db:"username"`
+	RefreshToken string      `db:"refresh_token"`
+	UserAgent    string      `db:"user_agent"`
+	ClientIp     string      `db:"client_ip"`
+	IsBlocked    pgtype.Bool `db:"is_blocked"`
+	ExpiresAt    time.Time   `db:"expires_at"`
+	CreatedAt    time.Time   `db:"created_at"`
 }
 
 type Transfer struct {
@@ -53,4 +53,15 @@ type User struct {
 	HashedPassword    string    `db:"hashed_password"`
 	PasswordChangedAt time.Time `db:"password_changed_at"`
 	CreatedAt         time.Time `db:"created_at"`
+	IsEmailActivated  bool      `db:"is_email_activated"`
+}
+
+type VerifyEmail struct {
+	ID         int64     `db:"id"`
+	Username   string    `db:"username"`
+	Email      string    `db:"email"`
+	SecretCode string    `db:"secret_code"`
+	IsUsed     bool      `db:"is_used"`
+	CreatedAt  time.Time `db:"created_at"`
+	ExpiredAt  time.Time `db:"expired_at"`
 }

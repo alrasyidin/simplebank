@@ -10,7 +10,7 @@ import (
 	db "github.com/alrasyidin/simplebank-go/db/sqlc"
 	"github.com/alrasyidin/simplebank-go/token"
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type createAccountParams struct {
@@ -36,9 +36,10 @@ func (server *Server) createAccount(ctx *gin.Context) {
 	account, err := server.store.CreateAccount(ctx, data)
 	if err != nil {
 		log.Println(err)
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
-			case "foreign_key_violation", "unique_violation":
+		var pqErr *pgconn.PgError
+		if errors.As(err, &pqErr) {
+			switch pqErr.Code {
+			case db.ErrForeignKeyViolations, db.ErrUniqueViolations:
 				ctx.JSON(http.StatusForbidden, errorResponse(pqErr))
 				return
 			}

@@ -16,6 +16,9 @@ type Config struct {
 	TokenKey             string        `mapstructure:"TOKEN_KEY"`
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	GmailUsername        string        `mapstructure:"GMAIL_USERNAME"`
+	GmailPassword        string        `mapstructure:"GMAIL_PASSWORD"`
+	GmailName            string        `mapstructure:"GMAIL_NAME"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

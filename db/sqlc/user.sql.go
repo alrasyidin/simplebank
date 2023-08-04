@@ -7,14 +7,15 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO
   users (username, email, hashed_password, full_name)
 VALUES
-  ($1, $2, $3, $4) RETURNING username, full_name, email, hashed_password, password_changed_at, created_at
+  ($1, $2, $3, $4) RETURNING username, full_name, email, hashed_password, password_changed_at, created_at, is_email_activated
 `
 
 type CreateUserParams struct {
@@ -25,7 +26,7 @@ type CreateUserParams struct {
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser,
+	row := q.db.QueryRow(ctx, createUser,
 		arg.Username,
 		arg.Email,
 		arg.HashedPassword,
@@ -39,13 +40,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.HashedPassword,
 		&i.PasswordChangedAt,
 		&i.CreatedAt,
+		&i.IsEmailActivated,
 	)
 	return i, err
 }
 
 const getUser = `-- name: GetUser :one
 SELECT
-  username, full_name, email, hashed_password, password_changed_at, created_at
+  username, full_name, email, hashed_password, password_changed_at, created_at, is_email_activated
 FROM
   users
 WHERE
@@ -54,7 +56,7 @@ LIMIT 1
 `
 
 func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, username)
+	row := q.db.QueryRow(ctx, getUser, username)
 	var i User
 	err := row.Scan(
 		&i.Username,
@@ -63,6 +65,7 @@ func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
 		&i.HashedPassword,
 		&i.PasswordChangedAt,
 		&i.CreatedAt,
+		&i.IsEmailActivated,
 	)
 	return i, err
 }
@@ -75,7 +78,7 @@ SET
   full_name = CASE WHEN $5::bool THEN $6 ELSE full_name END
 WHERE 
   username = $7
-RETURNING username, full_name, email, hashed_password, password_changed_at, created_at
+RETURNING username, full_name, email, hashed_password, password_changed_at, created_at, is_email_activated
 `
 
 type UpdateUserUsingCaseFirstParams struct {
@@ -89,7 +92,7 @@ type UpdateUserUsingCaseFirstParams struct {
 }
 
 func (q *Queries) UpdateUserUsingCaseFirst(ctx context.Context, arg UpdateUserUsingCaseFirstParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUserUsingCaseFirst,
+	row := q.db.QueryRow(ctx, updateUserUsingCaseFirst,
 		arg.SetHashedPassword,
 		arg.HashedPassword,
 		arg.SetEmail,
@@ -106,6 +109,7 @@ func (q *Queries) UpdateUserUsingCaseFirst(ctx context.Context, arg UpdateUserUs
 		&i.HashedPassword,
 		&i.PasswordChangedAt,
 		&i.CreatedAt,
+		&i.IsEmailActivated,
 	)
 	return i, err
 }
@@ -116,26 +120,29 @@ SET
   hashed_password = coalesce($1, hashed_password),
   password_changed_at = coalesce($2, password_changed_at),
   email = coalesce($3, email),
-  full_name = coalesce($4, full_name)
+  full_name = coalesce($4, full_name),
+  is_email_activated = coalesce($5, is_email_activated)
 WHERE 
-  username = $5
-RETURNING username, full_name, email, hashed_password, password_changed_at, created_at
+  username = $6
+RETURNING username, full_name, email, hashed_password, password_changed_at, created_at, is_email_activated
 `
 
 type UpdateUserUsingCaseSecondParams struct {
-	HashedPassword    sql.NullString `db:"hashed_password"`
-	PasswordChangedAt sql.NullTime   `db:"password_changed_at"`
-	Email             sql.NullString `db:"email"`
-	FullName          sql.NullString `db:"full_name"`
-	Username          string         `db:"username"`
+	HashedPassword    pgtype.Text        `db:"hashed_password"`
+	PasswordChangedAt pgtype.Timestamptz `db:"password_changed_at"`
+	Email             pgtype.Text        `db:"email"`
+	FullName          pgtype.Text        `db:"full_name"`
+	IsEmailActivated  pgtype.Bool        `db:"is_email_activated"`
+	Username          string             `db:"username"`
 }
 
 func (q *Queries) UpdateUserUsingCaseSecond(ctx context.Context, arg UpdateUserUsingCaseSecondParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUserUsingCaseSecond,
+	row := q.db.QueryRow(ctx, updateUserUsingCaseSecond,
 		arg.HashedPassword,
 		arg.PasswordChangedAt,
 		arg.Email,
 		arg.FullName,
+		arg.IsEmailActivated,
 		arg.Username,
 	)
 	var i User
@@ -146,6 +153,7 @@ func (q *Queries) UpdateUserUsingCaseSecond(ctx context.Context, arg UpdateUserU
 		&i.HashedPassword,
 		&i.PasswordChangedAt,
 		&i.CreatedAt,
+		&i.IsEmailActivated,
 	)
 	return i, err
 }

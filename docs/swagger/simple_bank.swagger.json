@@ -23,6 +23,8 @@
   "paths": {
     "/v1/create_user": {
       "post": {
+        "summary": "Create User",
+        "description": "Use this API to register user",
         "operationId": "SimpleBank_CreateUser",
         "responses": {
           "200": {
@@ -55,6 +57,8 @@
     },
     "/v1/login_user": {
       "post": {
+        "summary": "Update User",
+        "description": "Use this API to update user",
         "operationId": "SimpleBank_LoginUser",
         "responses": {
           "200": {
@@ -87,6 +91,8 @@
     },
     "/v1/update_user": {
       "patch": {
+        "summary": "Login User",
+        "description": "Use this API to login user",
         "operationId": "SimpleBank_UpdateUser",
         "responses": {
           "200": {
@@ -110,6 +116,45 @@
             "schema": {
               "$ref": "#/definitions/pbUpdateUserRequest"
             }
+          }
+        ],
+        "tags": [
+          "SimpleBank"
+        ]
+      }
+    },
+    "/v1/verify": {
+      "get": {
+        "summary": "Verify Email User",
+        "description": "Use this API to verify email user",
+        "operationId": "SimpleBank_VerifyEmail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbVerifyEmailResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "emailId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "secretCode",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -224,6 +269,14 @@
         "createdAt": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "pbVerifyEmailResponse": {
+      "type": "object",
+      "properties": {
+        "isVerified": {
+          "type": "boolean"
         }
       }
     },

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"net"
 	"net/http"
 	"os"
@@ -11,11 +10,14 @@ import (
 	db "github.com/alrasyidin/simplebank-go/db/sqlc"
 	"github.com/alrasyidin/simplebank-go/docs"
 	"github.com/alrasyidin/simplebank-go/gapi"
+	"github.com/alrasyidin/simplebank-go/mail"
 	"github.com/alrasyidin/simplebank-go/pb"
 	"github.com/alrasyidin/simplebank-go/util"
 	"github.com/alrasyidin/simplebank-go/worker"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hibiken/asynq"
+	_ "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -31,29 +33,30 @@ func main() {
 		log.Fatal().Err(err).Msg("cannot load config")
 	}
 
-	conn, err := sql.Open(config.DBDriver, config.DBSource)
+	poolConn, err := pgxpool.New(context.Background(), config.DBSource)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot connect to db")
 	}
 
-	store := db.NewStore(conn)
+	store := db.NewStore(poolConn)
 
 	redisOpt := asynq.RedisClientOpt{
 		Addr: config.RedisAddress,
 	}
 
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
-	go runTaskProcessor(redisOpt, store)
+	go runTaskProcessor(redisOpt, store, config)
 	go runGatewayServer(store, config, taskDistributor)
 	runGRPCServer(store, config, taskDistributor)
 	// runGinServer(store, config)
 }
 
-func runTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) {
-	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store)
+func runTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store, config util.Config) {
+	mailer := mail.NewGmailSender(config.GmailName, config.GmailUsername, config.GmailPassword)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mailer)
 
-	log.Info().Msg("tart task processor")
+	log.Info().Msg("Start task processor")
 	err := taskProcessor.Start()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to start task processor")
@@ -89,7 +92,7 @@ func runGRPCServer(store db.Store, config util.Config, taskDistributor worker.Ta
 		log.Fatal().Err(err).Msg("cannot create listener")
 	}
 
-	log.Info().Msgf("start gRPC server at %s", listener.Addr().String())
+	log.Info().Msgf("Start gRPC server at %s", listener.Addr().String())
 	err = grpcServer.Serve(listener)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot start gRPC server")

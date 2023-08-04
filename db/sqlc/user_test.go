@@ -2,11 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/alrasyidin/simplebank-go/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +22,7 @@ func createRandomUser(t *testing.T) User {
 		FullName:       util.RandomOwner(),
 	}
 
-	user, err := testQueries.CreateUser(context.Background(), arg)
+	user, err := testStore.CreateUser(context.Background(), arg)
 	require.NoError(t, err)
 
 	require.NotEmpty(t, user)
@@ -42,7 +42,7 @@ func TestCreateUser(t *testing.T) {
 func TestGetUser(t *testing.T) {
 	user := createRandomUser(t)
 
-	getUser, err := testQueries.GetUser(context.Background(), user.Username)
+	getUser, err := testStore.GetUser(context.Background(), user.Username)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, getUser)
@@ -60,14 +60,14 @@ func TestUpdateUserFullName(t *testing.T) {
 	fullName := util.RandomString(10)
 
 	arg := UpdateUserUsingCaseSecondParams{
-		FullName: sql.NullString{
+		FullName: pgtype.Text{
 			String: fullName,
 			Valid:  true,
 		},
 		Username: oldUser.Username,
 	}
 
-	updatedUser, err := testQueries.UpdateUserUsingCaseSecond(context.Background(), arg)
+	updatedUser, err := testStore.UpdateUserUsingCaseSecond(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, updatedUser)
 	require.NotEqual(t, oldUser.FullName, updatedUser.FullName)
@@ -82,14 +82,14 @@ func TestUpdateUserEmail(t *testing.T) {
 	email := util.RandomEmail()
 
 	arg := UpdateUserUsingCaseSecondParams{
-		Email: sql.NullString{
+		Email: pgtype.Text{
 			String: email,
 			Valid:  true,
 		},
 		Username: oldUser.Username,
 	}
 
-	updatedUser, err := testQueries.UpdateUserUsingCaseSecond(context.Background(), arg)
+	updatedUser, err := testStore.UpdateUserUsingCaseSecond(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, updatedUser)
 	require.NotEqual(t, oldUser.Email, updatedUser.Email)
@@ -106,14 +106,14 @@ func TestUpdateHashedPassword(t *testing.T) {
 	require.NoError(t, err)
 
 	arg := UpdateUserUsingCaseSecondParams{
-		HashedPassword: sql.NullString{
+		HashedPassword: pgtype.Text{
 			String: hashedPassword,
 			Valid:  true,
 		},
 		Username: oldUser.Username,
 	}
 
-	updatedUser, err := testQueries.UpdateUserUsingCaseSecond(context.Background(), arg)
+	updatedUser, err := testStore.UpdateUserUsingCaseSecond(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, updatedUser)
 	require.NotEqual(t, oldUser.HashedPassword, updatedUser.HashedPassword)
@@ -132,22 +132,22 @@ func TestUpdateUserAllFields(t *testing.T) {
 	require.NoError(t, err)
 
 	arg := UpdateUserUsingCaseSecondParams{
-		HashedPassword: sql.NullString{
+		HashedPassword: pgtype.Text{
 			String: hashedPassword,
 			Valid:  true,
 		},
-		Email: sql.NullString{
+		Email: pgtype.Text{
 			String: newEmail,
 			Valid:  true,
 		},
-		FullName: sql.NullString{
+		FullName: pgtype.Text{
 			String: newFullname,
 			Valid:  true,
 		},
 		Username: oldUser.Username,
 	}
 
-	updatedUser, err := testQueries.UpdateUserUsingCaseSecond(context.Background(), arg)
+	updatedUser, err := testStore.UpdateUserUsingCaseSecond(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, updatedUser)
 	require.NotEqual(t, oldUser.HashedPassword, updatedUser.HashedPassword)

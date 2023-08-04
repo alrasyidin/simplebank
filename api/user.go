@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
+
 	"net/http"
 	"time"
 
@@ -12,7 +12,8 @@ import (
 	"github.com/alrasyidin/simplebank-go/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/rs/zerolog/log"
 )
 
 type createUserParams struct {
@@ -63,10 +64,11 @@ func (server *Server) createUser(ctx *gin.Context) {
 
 	user, err := server.store.CreateUser(ctx, data)
 	if err != nil {
-		log.Println(err)
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
-			case "unique_violation":
+		log.Print(err)
+		var pqErr *pgconn.PgError
+		if errors.As(err, &pqErr) {
+			switch pqErr.Code {
+			case db.ErrUniqueViolations:
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
 			}

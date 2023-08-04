@@ -2,32 +2,34 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Store interface {
 	ExecTx(ctx context.Context, fn func(*Queries) error) error
 	TransferTx(ctx context.Context, arg TransferTxParam) (TransferTxResult, error)
 	CreateUserTx(ctx context.Context, arg CreateUserTxParam) (CreateUserTxResult, error)
+	VerifyEmailTx(ctx context.Context, arg VerifyEmailTxParam) (VerifyEmailTxResult, error)
 	AddMoney(ctx context.Context, q *Queries, accountID1, amount1, accountID2, amount2 int64) (account1, account2 Account, err error)
 	Querier
 }
 
 type SQLStore struct {
 	*Queries
-	db *sql.DB
+	poolConn *pgxpool.Pool
 }
 
-func NewStore(db *sql.DB) Store {
+func NewStore(poolConn *pgxpool.Pool) Store {
 	return &SQLStore{
-		Queries: New(db),
-		db:      db,
+		Queries:  New(poolConn),
+		poolConn: poolConn,
 	}
 }
 
 func (store *SQLStore) ExecTx(ctx context.Context, fn func(*Queries) error) error {
-	tx, err := store.db.BeginTx(ctx, nil)
+	tx, err := store.poolConn.Begin(ctx)
 
 	if err != nil {
 		return err
@@ -38,7 +40,7 @@ func (store *SQLStore) ExecTx(ctx context.Context, fn func(*Queries) error) erro
 	err = fn(q)
 
 	if err != nil {
-		rbErr := tx.Rollback()
+		rbErr := tx.Rollback(ctx)
 
 		if rbErr != nil {
 			return fmt.Errorf("tx err: %v, rollback error: %v", err, rbErr)
@@ -47,5 +49,5 @@ func (store *SQLStore) ExecTx(ctx context.Context, fn func(*Queries) error) erro
 		return err
 	}
 
-	return tx.Commit()
+	return tx.Commit(ctx)
 }

@@ -14,10 +14,12 @@ migratedown:
 	migrate -path db/migrations -database "${DB_URL}" -verbose down
 migratedown1:
 	migrate -path db/migrations -database "${DB_URL}" -verbose down 1
+new_migration:
+	migrate create -ext sql -dir db/migrations -seq ${name}
 sqlc:
 	sqlc generate
 test:
-	go test -v -cover ./...
+	go test -v -cover -short ./...
 server:
 	air
 mock:
@@ -37,4 +39,4 @@ evans:
 redis:
 	docker run --name redis -p 6378:6379 -d redis:7.0.12-alpine
 
-.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test mock server dbdocs proto redis
+.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test mock server dbdocs proto redis new_migration

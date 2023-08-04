@@ -7,10 +7,10 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createSession = `-- name: CreateSession :one
@@ -21,17 +21,17 @@ VALUES
 `
 
 type CreateSessionParams struct {
-	ID           uuid.UUID    `db:"id"`
-	Username     string       `db:"username"`
-	RefreshToken string       `db:"refresh_token"`
-	UserAgent    string       `db:"user_agent"`
-	ClientIp     string       `db:"client_ip"`
-	IsBlocked    sql.NullBool `db:"is_blocked"`
-	ExpiresAt    time.Time    `db:"expires_at"`
+	ID           uuid.UUID   `db:"id"`
+	Username     string      `db:"username"`
+	RefreshToken string      `db:"refresh_token"`
+	UserAgent    string      `db:"user_agent"`
+	ClientIp     string      `db:"client_ip"`
+	IsBlocked    pgtype.Bool `db:"is_blocked"`
+	ExpiresAt    time.Time   `db:"expires_at"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {
-	row := q.db.QueryRowContext(ctx, createSession,
+	row := q.db.QueryRow(ctx, createSession,
 		arg.ID,
 		arg.Username,
 		arg.RefreshToken,
@@ -65,7 +65,7 @@ LIMIT 1
 `
 
 func (q *Queries) GetSession(ctx context.Context, id uuid.UUID) (Session, error) {
-	row := q.db.QueryRowContext(ctx, getSession, id)
+	row := q.db.QueryRow(ctx, getSession, id)
 	var i Session
 	err := row.Scan(
 		&i.ID,

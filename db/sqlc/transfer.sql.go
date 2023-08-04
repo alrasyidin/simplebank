@@ -23,7 +23,7 @@ type CreateTransferParams struct {
 }
 
 func (q *Queries) CreateTransfer(ctx context.Context, arg CreateTransferParams) (Transfer, error) {
-	row := q.db.QueryRowContext(ctx, createTransfer, arg.FromAccountID, arg.ToAccountID, arg.Amount)
+	row := q.db.QueryRow(ctx, createTransfer, arg.FromAccountID, arg.ToAccountID, arg.Amount)
 	var i Transfer
 	err := row.Scan(
 		&i.ID,
@@ -40,7 +40,7 @@ DELETE FROM transfers WHERE id = $1
 `
 
 func (q *Queries) DeleteTransfer(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteTransfer, id)
+	_, err := q.db.Exec(ctx, deleteTransfer, id)
 	return err
 }
 
@@ -49,7 +49,7 @@ SELECT id, from_account_id, to_account_id, amount, created_at FROM transfers WHE
 `
 
 func (q *Queries) GetTransfer(ctx context.Context, id int64) (Transfer, error) {
-	row := q.db.QueryRowContext(ctx, getTransfer, id)
+	row := q.db.QueryRow(ctx, getTransfer, id)
 	var i Transfer
 	err := row.Scan(
 		&i.ID,
@@ -66,7 +66,7 @@ SELECT id, from_account_id, to_account_id, amount, created_at FROM transfers
 `
 
 func (q *Queries) ListTransfer(ctx context.Context) ([]Transfer, error) {
-	rows, err := q.db.QueryContext(ctx, listTransfer)
+	rows, err := q.db.Query(ctx, listTransfer)
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +85,6 @@ func (q *Queries) ListTransfer(ctx context.Context) ([]Transfer, error) {
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -104,7 +101,7 @@ type UpdateTransferParams struct {
 }
 
 func (q *Queries) UpdateTransfer(ctx context.Context, arg UpdateTransferParams) (Transfer, error) {
-	row := q.db.QueryRowContext(ctx, updateTransfer, arg.ID, arg.Amount)
+	row := q.db.QueryRow(ctx, updateTransfer, arg.ID, arg.Amount)
 	var i Transfer
 	err := row.Scan(
 		&i.ID,

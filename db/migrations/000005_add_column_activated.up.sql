@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN is_email_activated BOOL NOT NULL DEFAULT FALSE;
