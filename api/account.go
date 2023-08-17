@@ -38,6 +38,7 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		log.Println(err)
 		var pqErr *pgconn.PgError
 		if errors.As(err, &pqErr) {
+			log.Print("pqErr", pqErr)
 			switch pqErr.Code {
 			case db.ErrForeignKeyViolations, db.ErrUniqueViolations:
 				ctx.JSON(http.StatusForbidden, errorResponse(pqErr))
